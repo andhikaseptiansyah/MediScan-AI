@@ -1,0 +1,2247 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    html {
+      height: 100%;
+    }
+
+    #app {
+      position: relative;
+    }
+
+    #app::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(30, 64, 175, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(251, 191, 36, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(30, 64, 175, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gradient-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(251, 191, 36, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .gradient-bg::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -5%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(30, 64, 175, 0.15);
+      transition: all 0.3s ease;
+      border: 2px solid rgba(30, 64, 175, 0.1);
+    }
+
+    .card:hover {
+      box-shadow: 0 12px 32px rgba(30, 64, 175, 0.25);
+      transform: translateY(-4px);
+      border-color: rgba(30, 64, 175, 0.3);
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-left: 6px solid #1e40af;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '+';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 80px;
+      font-weight: bold;
+      color: rgba(30, 64, 175, 0.1);
+      line-height: 1;
+    }
+
+    .stat-card.yellow {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-left: 6px solid #fbbf24;
+    }
+
+    .stat-card.yellow::before {
+      color: rgba(251, 191, 36, 0.15);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1a2e6b 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.5);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(251, 191, 36, 0.4);
+    }
+
+    .tab-active {
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      color: white;
+      border-bottom: 4px solid #fbbf24;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+    }
+
+    .tab-inactive {
+      background: white;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+    }
+
+    .tab-inactive:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast-success {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    }
+
+    .toast-error {
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    }
+
+    .toast-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      animation: scaleIn 0.3s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0.9);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .input-field {
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 14px 18px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #1e40af;
+      box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), 0 4px 12px rgba(30, 64, 175, 0.1);
+      background: #eff6ff;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-critical {
+      background: linear-gradient(135deg, #fecaca, #fca5a5);
+      color: #991b1b;
+      border: 2px solid #dc2626;
+    }
+
+    .badge-warning {
+      background: linear-gradient(135deg, #fde68a, #fcd34d);
+      color: #92400e;
+      border: 2px solid #f59e0b;
+    }
+
+    .badge-success {
+      background: linear-gradient(135deg, #86efac, #6ee7b7);
+      color: #065f46;
+      border: 2px solid #10b981;
+    }
+
+    .badge-info {
+      background: linear-gradient(135deg, #93c5fd, #60a5fa);
+      color: #1e3a8a;
+      border: 2px solid #1e40af;
+    }
+
+    .progress-bar {
+      background: #e5e7eb;
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg, #1e40af 0%, #1e3a8a 100%);
+      height: 100%;
+      transition: width 0.5s ease;
+    }
+
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .history-item {
+      border-left: 3px solid #1e40af;
+      padding-left: 16px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .history-item::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      background: #1e40af;
+      border-radius: 50%;
+      border: 3px solid white;
+    }
+
+    .history-item.hospitalized {
+      border-left-color: #dc2626;
+    }
+
+    .history-item.hospitalized::before {
+      background: #dc2626;
+    }
+
+    .checkbox-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-custom:checked {
+      background: #1e40af;
+      border-color: #1e40af;
+    }
+
+    .radio-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .radio-custom:checked {
+      background: #1e40af;
+      border-color: #1e40af;
+      box-shadow: inset 0 0 0 3px white;
+    }
+
+    .pain-scale {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pain-scale-item {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #bfdbfe;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 700;
+      background: white;
+      box-shadow: 0 2px 6px rgba(30, 64, 175, 0.1);
+    }
+
+    .pain-scale-item:hover {
+      border-color: #1e40af;
+      background: #dbeafe;
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+    }
+
+    .pain-scale-item.selected {
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      border-color: #1e3a8a;
+      color: white;
+      transform: scale(1.15);
+      box-shadow: 0 6px 16px rgba(30, 64, 175, 0.4);
+    }
+
+    .section-divider {
+      border-bottom: 3px solid #bfdbfe;
+      margin: 32px 0;
+      position: relative;
+    }
+
+    .section-divider::before {
+      content: '+';
+      position: absolute;
+      top: -16px;
+      left: 0;
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+    }
+
+    .section-divider::after {
+      content: attr(data-title);
+      position: absolute;
+      top: -16px;
+      left: 48px;
+      background: white;
+      padding: 4px 16px;
+      font-weight: 700;
+      color: #1e3a8a;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 2px solid #bfdbfe;
+      box-shadow: 0 2px 8px rgba(30, 64, 175, 0.15);
+    }
+
+    .notification-item {
+      background: white;
+      border-left: 4px solid #dc2626;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    .pulse-animation {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* Medical Result Modal Styles */
+    .medical-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .medical-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      opacity: 0.1;
+    }
+
+    .medical-card.critical {
+      border-color: #dc2626;
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    }
+
+    .medical-card.critical::before {
+      background: radial-gradient(circle, #dc2626 0%, transparent 70%);
+    }
+
+    .medical-card.success {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    }
+
+    .medical-card.success::before {
+      background: radial-gradient(circle, #10b981 0%, transparent 70%);
+    }
+
+    .medical-icon-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .medical-icon-pulse {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      animation: medicalPulse 2s ease-out infinite;
+    }
+
+    @keyframes medicalPulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    .vital-sign-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 4px solid;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .vital-sign-card:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .vital-sign-card.normal {
+      border-color: #10b981;
+    }
+
+    .vital-sign-card.warning {
+      border-color: #f59e0b;
+    }
+
+    .vital-sign-card.critical {
+      border-color: #dc2626;
+    }
+
+    .medical-pattern {
+      background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(30, 64, 175, 0.05) 10px, rgba(30, 64, 175, 0.05) 20px),
+        repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.05) 10px, rgba(251, 191, 36, 0.05) 20px);
+    }
+
+    .heartbeat-line {
+      width: 100%;
+      height: 60px;
+      background: 
+        linear-gradient(to right, 
+          transparent 0%, 
+          transparent 10%, 
+          currentColor 10%, 
+          currentColor 12%, 
+          transparent 12%,
+          transparent 15%,
+          currentColor 15%, 
+          currentColor 17%,
+          transparent 17%,
+          transparent 20%,
+          currentColor 20%,
+          currentColor 22%,
+          transparent 22%,
+          transparent 100%
+        );
+      background-size: 200px 2px;
+      background-repeat: repeat-x;
+      background-position: center;
+      opacity: 0.2;
+    }
+
+    .quick-action-btn {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-action-btn:hover {
+      border-color: #1e40af;
+      background: #eff6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+    }
+
+    .quick-action-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* --- CUSTOM CHATBOT STYLES (Diperbarui) --- */
+    .chatbot-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 900;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      /* Menggunakan gradien yang lebih menonjol */
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+      /* Bayangan yang lebih dalam */
+      box-shadow: 0 10px 30px rgba(30, 64, 175, 0.6), 0 0 0 4px rgba(251, 191, 36, 0.4); 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      transform: scale(1);
+    }
+
+    .chatbot-btn:hover {
+      transform: scale(1.05) rotate(5deg);
+      box-shadow: 0 15px 40px rgba(30, 64, 175, 0.8), 0 0 0 6px rgba(251, 191, 36, 0.5);
+    }
+
+    .chatbot-window {
+      position: fixed;
+      bottom: 100px;
+      right: 24px;
+      width: 350px;
+      height: 480px; /* Diperbesar sedikit */
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
+      z-index: 998;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border: 3px solid #1e40af; /* Tambahkan border */
+    }
+    
+    .chatbot-window.open {
+        display: flex;
+        animation: fadeInScale 0.3s ease-out;
+    }
+    
+    /* Gaya Header Chatbot Baru */
+    .chatbot-header {
+      background: linear-gradient(90deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+      padding: 16px;
+      border-top-left-radius: 17px;
+      border-top-right-radius: 17px;
+      box-shadow: 0 4px 10px rgba(30, 64, 175, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    /* Gaya Input Chatbot */
+    .chatbot-input-area {
+      padding: 12px;
+      border-top: 2px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    /* Gaya Bubble Pesan */
+    #chatbotMessages .flex.justify-start div {
+        background: #dbeafe; /* Light Blue */
+        color: #1e40af; /* Deep Blue Text */
+        border-radius: 12px 12px 12px 4px; /* Sudut kiri bawah lebih tajam */
+        box-shadow: 0 2px 4px rgba(30, 64, 175, 0.1);
+    }
+
+    #chatbotMessages .flex.justify-end div {
+        background: #10b981; /* Green/Teal */
+        color: white;
+        border-radius: 12px 12px 4px 12px; /* Sudut kanan bawah lebih tajam */
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+    
+    /* MODIFIKASI CSS: HILANGKAN IKON DROPDOWN UNTUK KOLOM EMOSI */
+    #emotionDetected.input-field[disabled] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: none !important; 
+        /* Pastikan tidak ada background icon (default browser atau Tailwind) */
+        padding-right: 18px; 
+        /* Jaga padding agar teks tidak terlalu ke kanan */
+    }
+
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+        }
+        to {
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    /* --- MODIFIKASI DESAIN ICON PENYAKIT --- */
+    .disease-icon-item {
+        width: 90px; /* Sedikit diperbesar */
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        /* Ganti box-shadow polos */
+        box-shadow: 0 4px 15px rgba(30, 64, 175, 0.15); 
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden; /* Untuk efek pseudo-element */
+        /* Tambahkan border yang lebih menonjol */
+        border: 3px solid transparent; 
+        /* Menambahkan margin untuk memastikan ikon tidak terlalu rapat, terutama saat wrap */
+        margin: 8px; 
+    }
+
+    .disease-icon-item:hover {
+        transform: translateY(-5px) scale(1.08); /* Efek hover yang lebih dramatis */
+        box-shadow: 0 10px 30px rgba(30, 64, 175, 0.3);
+    }
+
+    .disease-icon-item svg {
+        width: 36px; /* Ikon sedikit diperbesar */
+        height: 36px;
+        margin-bottom: 4px;
+        position: relative;
+        z-index: 2;
+        transition: color 0.3s ease;
+    }
+
+    .disease-icon-item span {
+        position: relative;
+        z-index: 2;
+        font-size: 11px; /* Font lebih kecil agar muat */
+    }
+
+    /* Efek Pseudo-element: Gradien Cahaya */
+    .disease-icon-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        opacity: 0.1;
+        transition: opacity 0.4s ease;
+        background: radial-gradient(circle at 50% 50%, white, transparent 70%);
+        z-index: 1;
+    }
+
+    .disease-icon-item:hover::before {
+        opacity: 0.3;
+    }
+
+    /* Penambahan Gradien Latar Belakang dan Border Khusus untuk Setiap Penyakit */
+
+    /* Jantung */
+    .disease-icon-item.bg-red-100 {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-color: #fca5a5;
+    }
+    .disease-icon-item.bg-red-100:hover {
+        border-color: #ef4444;
+    }
+
+    /* Diabetes */
+    .disease-icon-item.bg-yellow-100 {
+        background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+        border-color: #fcd34d;
+    }
+    .disease-icon-item.bg-yellow-100:hover {
+        border-color: #f59e0b;
+    }
+
+    /* Hipertensi */
+    .disease-icon-item.bg-green-100 {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-color: #a7f3d0;
+    }
+    .disease-icon-item.bg-green-100:hover {
+        border-color: #10b981;
+    }
+
+    /* Asma */
+    .disease-icon-item.bg-purple-100 {
+        background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+        border-color: #d8b4fe;
+    }
+    .disease-icon-item.bg-purple-100:hover {
+        border-color: #a855f7;
+    }
+
+    /* Infeksi */
+    .disease-icon-item.bg-indigo-100 {
+        background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+        border-color: #93c5fd;
+    }
+    .disease-icon-item.bg-indigo-100:hover {
+        border-color: #3b82f6;
+    }
+    /* --- END CHATBOT STYLES --- */
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body>
+  <div id="app" class="min-h-full" style="background: linear-gradient(180deg, #dbeafe 0%, #ffffff 50%, #fef3c7 100%);"><nav class="gradient-bg text-white shadow-lg" style="position: relative; z-index: 1;">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+       <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);">
+        <svg class="w-10 h-10" viewbox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#1e40af" /> <path d="M16 12h-3V9c0-.55-.45-1-1-1s-1 .45-1 1v3H8c-.55 0-1 .45-1 1s.45 1 1 1h3v3c0 .55.45 1 1 1s1-.45 1-1v-3h3c.55 0 1-.45 1-1s-.45-1-1-1z" fill="#fbbf24" /> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="white" opacity="0.3" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="dashboardTitle" class="text-2xl font-bold">MediScan AI</h1>
+        <p id="dashboardSubtitle" class="text-sm text-blue-100">Patient Health Monitoring System</p>
+       </div>
+      </div><button id="logoutBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-6 py-3 rounded-xl font-semibold transition-all backdrop-blur-sm border-2 border-white border-opacity-30"> <span class="flex items-center space-x-2"> <span>Logout</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg></span> </button>
+     </div>
+    </div>
+   </nav><main class="px-6 py-8" style="position: relative; z-index: 1;"><div class="flex space-x-2 mb-6 bg-white rounded-xl p-2 shadow"><button id="dashboardTab" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all tab-active">
+      <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg> Dashboard </button> <button id="assessmentTab" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all tab-inactive">
+      <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg> Penilaian Baru </button> <button id="historyTab" class="flex-1 py-3 px-6 rounded-lg font-semibold transition-all tab-inactive">
+      <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg> Riwayat </button>
+    </div><div id="dashboardView" class="fade-in"><div class="relative overflow-hidden rounded-3xl mb-8 shadow-2xl" style="background: linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #ec4899 100%);">
+      <div class="absolute inset-0 opacity-20">
+       <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+       <div class="absolute bottom-0 right-0 w-96 h-96 bg-yellow-300 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2"></div>
+      </div>
+      <div class="relative z-10 px-8 py-10 md:px-12 md:py-12">
+       <div class="grid md:grid-cols-2 gap-8 items-center"><div>
+         <div class="inline-block bg-yellow-400 text-gray-900 px-4 py-2 rounded-full text-sm font-bold mb-4 shadow-lg animate-bounce">
+          🎯 TEKNOLOGI AI TERBARU
+         </div>
+         <h2 class="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">Temukan Penyakit Anda dengan <span class="text-yellow-300">Kecerdasan AI</span></h2>
+         <p class="text-blue-100 text-lg mb-6 leading-relaxed">Deteksi emosi &amp; analisis kesehatan secara real-time menggunakan teknologi AI canggih. Dapatkan rekomendasi medis yang akurat dalam hitungan detik!</p>
+         <div class="flex flex-wrap gap-4 mb-6">
+          <div class="flex items-center space-x-2 bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-lg">
+           <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewbox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+           </svg><span class="text-white font-semibold">Deteksi Emosi AI</span>
+          </div>
+          <div class="flex items-center space-x-2 bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-lg">
+           <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewbox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+           </svg><span class="text-white font-semibold">Analisis Real-time</span>
+          </div>
+          <div class="flex items-center space-x-2 bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-lg">
+           <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewbox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+           </svg><span class="text-white font-semibold">Rekomendasi Akurat</span>
+          </div>
+         </div>
+         <button id="startAssessmentBtn" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-8 py-4 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center space-x-3 group"> 
+          <span class="text-lg">Mulai Penilaian AI Sekarang</span>
+          <svg class="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+         </button>
+        </div><div class="hidden md:block relative">
+         <div class="relative"><div class="absolute inset-0 flex items-center justify-center">
+           <div class="w-64 h-64 relative"><div class="absolute inset-0 border-4 border-yellow-300 rounded-full animate-ping opacity-20"></div>
+            <div class="absolute inset-4 border-4 border-yellow-300 rounded-full animate-pulse opacity-40"></div>
+            <div class="absolute inset-8 border-4 border-white rounded-full animate-pulse opacity-60"></div><div class="absolute inset-0 flex items-center justify-center">
+             <div class="bg-white rounded-full p-8 shadow-2xl">
+              <svg class="w-24 h-24 text-purple-600" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+              </svg>
+             </div>
+            </div><div class="absolute top-0 left-0 bg-yellow-300 rounded-full p-3 shadow-lg animate-bounce" style="animation-delay: 0.1s;">
+             <svg class="w-6 h-6 text-gray-900" fill="currentColor" viewbox="0 0 24 24"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z" />
+             </svg>
+            </div>
+            <div class="absolute top-0 right-0 bg-pink-300 rounded-full p-3 shadow-lg animate-bounce" style="animation-delay: 0.2s;">
+             <svg class="w-6 h-6 text-gray-900" fill="currentColor" viewbox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+             </svg>
+            </div>
+            <div class="absolute bottom-0 left-0 bg-green-300 rounded-full p-3 shadow-lg animate-bounce" style="animation-delay: 0.3s;">
+             <svg class="w-6 h-6 text-gray-900" fill="currentColor" viewbox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+             </svg>
+            </div>
+            <div class="absolute bottom-0 right-0 bg-blue-300 rounded-full p-3 shadow-lg animate-bounce" style="animation-delay: 0.4s;">
+             <svg class="w-6 h-6 text-gray-900" fill="currentColor" viewbox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
+             </svg>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><div class="absolute top-0 right-0 w-32 h-32 bg-yellow-300 rounded-full blur-3xl opacity-30 animate-pulse"></div>
+      <div class="absolute bottom-0 left-0 w-40 h-40 bg-pink-300 rounded-full blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s;"></div>
+     </div>
+     
+     <div class="mb-8 p-0" style="background: none; border: none; box-shadow: none;">
+        <div class="flex flex-wrap justify-between items-center px-4">
+            
+            <div class="disease-icon-item bg-red-100 text-red-600 border-2 border-red-300">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span class="text-xs font-semibold mt-1">Jantung</span>
+            </div>
+
+            <div class="disease-icon-item bg-yellow-100 text-yellow-700 border-2 border-yellow-400">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0-8.5c-.28 0-.5.22-.5.5s.22.5.5.5h.5V10c0 1.1-.9 2-2 2s-2-.9-2-2V7c0-1.66 1.34-3 3-3s3 1.34 3 3v.5h-.5c-.28 0-.5.22-.5.5s.22.5.5.5zM12 5c-.55 0-1 .45-1 1v1h2V6c0-.55-.45-1-1-1z"/></svg>
+                <span class="text-xs font-semibold mt-1">Diabetes</span>
+            </div>
+
+            <div class="disease-icon-item bg-green-100 text-green-700 border-2 border-green-400">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M13 18h-2v-2h2v2zm0-4h-2V9h2v5zm0-10H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM4 17h12V7H4v10z"/></svg>
+                <span class="text-xs font-semibold mt-1">Hipertensi</span>
+            </div>
+
+            <div class="disease-icon-item bg-purple-100 text-purple-700 border-2 border-purple-400">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-3.04 1.7-5.6 4.19-6.93l1.81 1.81c.2-.28.43-.54.67-.78L10 6.09C7.8 7.37 6 9.61 6 12c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.39-1.8-4.63-4-5.91l-.67.67c.24.24.47.5.67.78l1.81-1.81C19.3 6.4 21 8.96 21 12c0 4.41-3.59 8-8 8z"/></svg>
+                <span class="text-xs font-semibold mt-1">Asma</span>
+            </div>
+
+            <div class="disease-icon-item bg-indigo-100 text-indigo-700 border-2 border-indigo-400">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4zm10 15H4V8h16v11zM7 12H5v-2h2v2zm12 0h-2v-2h2v2zm-6 4H9v-2h4v2zm0-4h-4V9h4v3z"/></svg>
+                <span class="text-xs font-semibold mt-1">Infeksi</span>
+            </div>
+
+        </div>
+     </div>
+     <div id="notificationsPanel" class="hidden mb-8">
+      <div class="card bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 p-6">
+       <div class="flex items-start justify-between">
+        <div class="flex items-start space-x-4 flex-1">
+         <div class="bg-red-100 rounded-full p-3 pulse-animation">
+          <svg class="w-8 h-8 text-red-600" fill="currentColor" viewbox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+          </svg>
+         </div>
+         <div class="flex-1">
+          <h3 class="text-lg font-bold text-red-800 mb-2 flex items-center">⚠️ Notifikasi Kondisi Kritis <span id="notificationCount" class="ml-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full"></span></h3>
+          <div id="notificationsList" class="space-y-2"></div>
+         </div>
+        </div><button id="dismissNotifications" class="text-red-600 hover:text-red-800 font-semibold text-sm"> Tutup </button>
+       </div>
+      </div>
+     </div><div class="grid md:grid-cols-3 gap-6 mb-8">
+      <div class="card stat-card yellow p-6">
+       <div class="flex items-center justify-between mb-2">
+        <h3 class="text-gray-600 font-semibold">Rawat Inap Aktif</h3>
+        <svg class="w-8 h-8 text-yellow-600" fill="currentColor" viewbox="0 0 24 24"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z" />
+        </svg>
+       </div>
+       <p id="totalHospitalized" class="text-4xl font-bold text-yellow-700">0</p>
+       <p class="text-sm text-gray-500 mt-1">Membutuhkan perawatan</p>
+      </div>
+      <div class="card stat-card p-6">
+       <div class="flex items-center justify-between mb-2">
+        <h3 class="text-gray-600 font-semibold">Rata-rata Durasi Rawat Inap</h3>
+        <svg class="w-8 h-8 text-blue-800" fill="currentColor" viewbox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+        </svg>
+       </div>
+       <p id="avgDuration" class="text-4xl font-bold text-blue-900">0</p>
+       <p class="text-sm text-gray-500 mt-1">Hari rata-rata</p>
+      </div>
+      <div class="card stat-card p-6">
+       <div class="flex items-center justify-between mb-2">
+        <h3 class="text-gray-600 font-semibold">Emosi Dominan</h3>
+        <svg class="w-8 h-8 text-blue-800" fill="currentColor" viewbox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
+        </svg>
+       </div>
+       <p id="dominantEmotion" class="text-2xl font-bold text-blue-900">-</p>
+       <p class="text-sm text-gray-500 mt-1">7 hari terakhir</p>
+      </div>
+     </div>
+     
+     <div class="grid md:grid-cols-2 gap-6 mb-8">
+      
+      <div class="card p-6">
+       <h2 class="text-xl font-bold text-gray-800 mb-4">Statistik Emosi Pasien (7 Hari Terakhir)</h2>
+       <div id="emotionChart" class="space-y-3"></div>
+      </div>
+      
+      <div id="patientInfoCard" class="card p-8 flex flex-col items-center text-center 
+           bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-indigo-200 relative overflow-hidden">
+          
+          <div class="absolute top-0 left-0 w-full h-full opacity-30 medical-pattern"></div>
+          <div class="relative z-10 w-full flex flex-col items-center">
+
+              <h2 class="text-2xl font-extrabold text-blue-900 mb-6">Pasien Aktif Saat Ini</h2>
+              
+              <div id="patientPhotoContainer" class="w-40 h-40 rounded-full border-4 border-indigo-500 ring-4 ring-yellow-400 overflow-hidden shadow-2xl mb-4 
+                   bg-gray-300 flex items-center justify-center transform transition-all duration-300 hover:scale-105">
+                  <img id="patientPhoto" src="" alt="Patient Photo" class="w-full h-full object-cover hidden">
+                  <svg id="patientIcon" class="w-24 h-24 text-indigo-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+              
+              <p id="patientNameDisplay" class="text-3xl font-black text-gray-900 mt-2 mb-1">-</p>
+              <p id="patientBirthDateDisplay" class="text-md text-gray-600">Tanggal Lahir: -</p>
+              
+              <div class="mt-6 p-3 bg-white border-2 border-yellow-400 rounded-xl w-full max-w-xs shadow-lg transform hover:shadow-xl">
+                  <p class="text-sm font-semibold text-gray-700">Emosi Terdeteksi Saat Ini:</p>
+                  <p id="patientEmotionDisplay" class="text-2xl font-extrabold text-yellow-700 mt-1">-</p>
+              </div>
+          </div>
+      </div>
+     </div>
+     <div class="card p-6">
+      <div class="flex items-center justify-between mb-6">
+       <h2 class="text-xl font-bold text-gray-800">Penilaian Terbaru</h2><button id="newAssessmentBtn" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold"> + Penilaian Baru </button>
+      </div>
+      <div id="recentAssessmentsList" class="space-y-4">
+       <p class="text-center text-gray-500 py-8">Belum ada data penilaian. Mulai dengan membuat penilaian baru.</p>
+      </div>
+     </div>
+    </div><div id="assessmentView" class="hidden fade-in">
+     <div class="card p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Formulir Penilaian Kesehatan Pasien</h2>
+      <form id="assessmentForm"><div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div><label for="patientName" class="block text-sm font-semibold text-gray-700 mb-2">Nama Pasien *</label> 
+        <input type="text" id="patientName" required class="w-full input-field" placeholder="Masukkan nama lengkap pasien" readonly>
+        </div>
+        <div><label for="emotionDetected" class="block text-sm font-semibold text-gray-700 mb-2">Deteksi Emosi *</label> 
+         <select id="emotionDetected" required class="w-full input-field" disabled> 
+             <option value="">Pilih emosi yang terdeteksi</option> 
+             <option value="Pain">Pain (Nyeri)</option> 
+             <option value="Anxiety">Anxiety (Cemas)</option> 
+             <option value="Fear">Fear (Takut)</option> 
+             <option value="Sadness">Sadness (Sedih)</option> 
+             <option value="Neutral">Neutral (Netral)</option> 
+             <option value="Happy">Happy (Senang)</option> 
+             <option value="Calm">Calm (Tenang)</option> 
+         </select>
+         <input type="hidden" id="emotionDetectedValue" name="emotionDetectedValue" value="">
+        </div>
+        </div>
+       <div class="section-divider" data-title="A. DATA PENYAKIT DASAR"></div><div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div><label class="block text-sm font-semibold text-gray-700 mb-3">Demam</label>
+         <div class="flex space-x-6"><label class="flex items-center space-x-2 cursor-pointer"> <input type="radio" name="fever" value="true" class="radio-custom"> <span>Ya</span> </label> <label class="flex items-center space-x-2 cursor-pointer"> <input type="radio" name="fever" value="false" class="radio-custom" checked> <span>Tidak</span> </label>
+         </div>
+        </div>
+        <div><label for="temperature" class="block text-sm font-semibold text-gray-700 mb-2">Suhu Tubuh (°C)</label> <input type="number" id="temperature" step="0.1" class="w-full input-field" placeholder="36.5">
+        </div>
+       </div>
+       <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div><label class="block text-sm font-semibold text-gray-700 mb-3">Batuk</label>
+         <div class="flex space-x-6"><label class="flex items-center space-x-2 cursor-pointer"> <input type="radio" name="cough" value="true" class="radio-custom"> <span>Ya</span> </label> <label class="flex items-center space-x-2 cursor-pointer"> <input type="radio" name="cough" value="false" class="radio-custom" checked> <span>Tidak</span> </label>
+         </div>
+        </div>
+        <div><label for="coughType" class="block text-sm font-semibold text-gray-700 mb-2">Jenis Batuk</label> <select id="coughType" class="w-full input-field"> <option value="">Tidak ada batuk</option> <option value="Kering">Kering</option> <option value="Berdahak">Berdahak</option> </select>
+        </div>
+       </div>
+       <div class="mb-6"><label class="block text-sm font-semibold text-gray-700 mb-3">Napas Pendek / Sesak Napas</label>
+        <div class="flex space-x-6"><label class="flex items-center space-x-2 cursor-pointer"> <input type="radio" name="shortnessBreath" value="true" class="radio-custom"> <span>Ya</span> </label> <label class="flex items-center space-x-2 cursor-pointer"> <input type="radio" name="shortnessBreath" value="false" class="radio-custom" checked> <span>Tidak</span> </label>
+        </div>
+       </div>
+       <div class="section-divider" data-title="B. KELUHAN DAN RIWAYAT"></div><div class="mb-6"><label for="mainComplaint" class="block text-sm font-semibold text-gray-700 mb-2">Keluhan Utama Hari Ini *</label> <textarea id="mainComplaint" required rows="3" class="w-full input-field" placeholder="Tuliskan keluhan utama atau pilih: Demam, Batuk, Sakit Perut, Pusing, dll."></textarea>
+       </div>
+       <div class="mb-6"><label for="chronicDisease" class="block text-sm font-semibold text-gray-700 mb-2">Riwayat Penyakit Kronis</label> <select id="chronicDisease" class="w-full input-field"> <option value="Tidak Ada">Tidak Ada</option> <option value="Jantung">Jantung</option> <option value="Diabetes">Diabetes</option> <option value="Hipertensi">Hipertensi</option> <option value="Asma/PPOK">Asma/PPOK</option> <option value="Ginjal">Ginjal</option> <option value="Lainnya">Lainnya</option> </select>
+       </div>
+       <div class="mb-6"><label class="block text-sm font-semibold text-gray-700 mb-3">Gejala Tambahan (Pernapasan)</label>
+        <div class="grid md:grid-cols-2 gap-3"><label class="flex items-center space-x-2 cursor-pointer"> <input type="checkbox" value="Sakit Tenggorokan" class="checkbox-custom additional-symptoms"> <span>Sakit Tenggorokan</span> </label> <label class="flex items-center space-x-2 cursor-pointer"> <input type="checkbox" value="Pilek/Hidung Tersumbat" class="checkbox-custom additional-symptoms"> <span>Pilek/Hidung Tersumbat</span> </label> <label class="flex items-center space-x-2 cursor-pointer"> <input type="checkbox" value="Nyeri Otot/Sendi" class="checkbox-custom additional-symptoms"> <span>Nyeri Otot/Sendi</span> </label> <label class="flex items-center space-x-2 cursor-pointer"> <input type="checkbox" value="Hilang Indra Penciuman/Pengecap" class="checkbox-custom additional-symptoms"> <span>Hilang Indra Penciuman/Pengecap</span> </label>
+        </div>
+       </div>
+       <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div><label class="block text-sm font-semibold text-gray-700 mb-2">Durasi Keluhan</label>
+         <div class="flex space-x-3"><input type="number" id="durationNumber" min="1" class="flex-1 input-field" placeholder="2"> <select id="durationUnit" class="flex-1 input-field"> <option value="Hari">Hari</option> <option value="Minggu">Minggu</option> <option value="Bulan">Bulan</option> </select>
+         </div>
+        </div>
+       </div>
+       <div class="mb-6"><label class="block text-sm font-semibold text-gray-700 mb-3">Skala Nyeri (0 = Tidak Ada, 10 = Sangat Parah)</label>
+        <div class="pain-scale" id="painScale">
+         <div class="pain-scale-item" data-value="0">
+          0
+         </div>
+         <div class="pain-scale-item" data-value="1">
+          1
+         </div>
+         <div class="pain-scale-item" data-value="2">
+          2
+         </div>
+         <div class="pain-scale-item" data-value="3">
+          3
+         </div>
+         <div class="pain-scale-item" data-value="4">
+          4
+         </div>
+         <div class="pain-scale-item" data-value="5">
+          5
+         </div>
+         <div class="pain-scale-item" data-value="6">
+          6
+         </div>
+         <div class="pain-scale-item" data-value="7">
+          7
+         </div>
+         <div class="pain-scale-item" data-value="8">
+          8
+         </div>
+         <div class="pain-scale-item" data-value="9">
+          9
+         </div>
+         <div class="pain-scale-item" data-value="10">
+          10
+         </div>
+        </div><input type="hidden" id="painScaleValue" value="0">
+       </div>
+       <div class="section-divider" data-title="C. PENILAIAN RISIKO KRITIS"></div><div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-6">
+        <div class="flex items-start space-x-3 mb-4">
+         <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z" />
+         </svg>
+         <div>
+          <h3 class="text-lg font-bold text-red-800 mb-1">Penilaian Kondisi Kritis</h3>
+          <p class="text-sm text-red-700">Jawaban "Kritis" akan mengarah pada rekomendasi Rawat Inap Segera</p>
+         </div>
+        </div>
+        <div class="space-y-4">
+         <div><label for="spo2" class="block text-sm font-semibold text-gray-700 mb-2"> Saturasi Oksigen (SpO2) * </label> <select id="spo2" required class="w-full input-field"> <option value="">Pilih tingkat SpO2</option> <option value="Normal (>95%)">Normal (&gt;95%)</option> <option value="Cukup (93-95%)">Cukup (93-95%)</option> <option value="Kritis (≤92%)">Kritis (≤92%)</option> <option value="Tidak Tahu/Tidak Diukur">Tidak Tahu/Tidak Diukur</option> </select>
+         </div>
+         <div><label for="breathingDifficulty" class="block text-sm font-semibold text-gray-700 mb-2"> Kesulitan Bernapas * </label> <select id="breathingDifficulty" required class="w-full input-field"> <option value="">Pilih kondisi</option> <option value="Tidak Ada">Tidak Ada</option> <option value="Saat Aktivitas">Saat Aktivitas</option> <option value="Saat Istirahat (Kritis)">Saat Istirahat (Kritis)</option> </select>
+         </div>
+         <div><label for="foodIntake" class="block text-sm font-semibold text-gray-700 mb-2"> Asupan Cairan &amp; Makanan * </label> <select id="foodIntake" required class="w-full input-field"> <option value="">Pilih kondisi</option> <option value="Ya, Normal">Ya, Normal</option> <option value="Sulit Makan/Minum">Sulit Makan/Minum</option> <option value="Tidak Bisa Menelan Apapun (Kritis)">Tidak Bisa Menelan Apapun (Kritis)</option> </select>
+         </div>
+         <div><label for="consciousness" class="block text-sm font-semibold text-gray-700 mb-2"> Kondisi Umum/Kesadaran * </label> <select id="consciousness" required class="w-full input-field"> <option value="">Pilih kondisi</option> <option value="Normal/Sadar Penuh">Normal/Sadar Penuh</option> <option value="Pusing Ringan">Pusing Ringan</option> <option value="Pusing Hebat/Sering Pingsan (Kritis)">Pusing Hebat/Sering Pingsan (Kritis)</option> <option value="Kebingungan/Penurunan Kesadaran (Kritis)">Kebingungan/Penurunan Kesadaran (Kritis)</option> <option value="Nyeri Dada Kanan/Kiri">Nyeri Dada Kanan/Kiri</option> </select>
+         </div>
+         <div><label for="urineOutput" class="block text-sm font-semibold text-gray-700 mb-2"> Output Urin (BAK) * </label> <select id="urineOutput" required class="w-full input-field"> <option value="">Pilih kondisi</option> <option value="Normal">Normal</option> <option value="Sedikit">Sedikit</option> <option value="Tidak BAK dalam 8 Jam Terakhir (Kritis)">Tidak BAK dalam 8 Jam Terakhir (Kritis)</option> </select>
+         </div>
+        </div>
+       </div>
+       <div class="flex justify-end space-x-4"><button type="button" id="cancelAssessment" class="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"> Batal </button> <button type="submit" id="submitAssessment" class="btn-primary text-white px-8 py-3 rounded-lg font-semibold"> Analisis &amp; Simpan </button>
+       </div>
+      </form>
+     </div>
+    </div><div id="historyView" class="hidden fade-in">
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-6">Riwayat Penilaian Pasien</h2><div class="flex space-x-3 mb-6"><button id="filterAll" class="px-6 py-2 bg-blue-900 text-white rounded-lg font-semibold transition-all"> Semua </button> <button id="filterHospitalized" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"> Rawat Inap </button> <button id="filterOutpatient" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"> Rawat Jalan </button>
+      </div>
+      <div id="historyList" class="space-y-6">
+       <p class="text-center text-gray-500 py-8">Belum ada riwayat penilaian.</p>
+      </div>
+     </div>
+    </div>
+   </main><div id="resultModal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 900px;">
+     <div class="text-center mb-6">
+      <div class="medical-icon-wrapper mb-4">
+       <div id="resultIconPulse" class="medical-icon-pulse"></div>
+       <div id="resultIcon" class="inline-flex items-center justify-center w-24 h-24 rounded-full relative z-10 shadow-lg"></div>
+      </div>
+      <h2 id="resultTitle" class="text-3xl font-bold mb-2"></h2>
+      <p id="resultSubtitle" class="text-gray-600"></p>
+     </div>
+     <div id="resultContent" class="space-y-4 mb-6"></div>
+     <div class="flex justify-end space-x-4"><button id="closeResultModal" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"> Tutup </button> <button id="updateHealthBtn" class="hidden btn-secondary text-white px-6 py-3 rounded-lg font-semibold"> Update Kondisi Kesehatan </button>
+     </div>
+    </div>
+   </div><div id="updateHealthModal" class="modal-overlay hidden">
+    <div class="modal-content">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6">Update Kondisi Kesehatan Pasien</h2>
+     <p class="text-gray-600 mb-6">Pasien: <span id="updatePatientName" class="font-semibold"></span></p>
+     <form id="updateHealthForm">
+      <div class="section-divider" data-title="METRIK KRITIS"></div>
+      <div class="grid md:grid-cols-3 gap-6 mb-6">
+       <div><label for="updateSpo2" class="block text-sm font-semibold text-gray-700 mb-2">SpO2 (%)</label> <input type="number" id="updateSpo2" min="0" max="100" class="w-full input-field" placeholder="95">
+       </div>
+       <div><label for="updateTemperature" class="block text-sm font-semibold text-gray-700 mb-2">Suhu (°C)</label> <input type="number" id="updateTemperature" step="0.1" class="w-full input-field" placeholder="36.5">
+       </div>
+       <div><label for="updateBloodPressure" class="block text-sm font-semibold text-gray-700 mb-2">Tekanan Darah</label> <input type="text" id="updateBloodPressure" class="w-full input-field" placeholder="120/80">
+       </div>
+      </div>
+      <div class="section-divider" data-title="PERKEMBANGAN GEJALA"></div>
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+       <div><label for="updatePainScale" class="block text-sm font-semibold text-gray-700 mb-2">Skala Nyeri (1-10)</label> <input type="number" id="updatePainScale" min="0" max="10" class="w-full input-field" placeholder="5">
+       </div>
+       <div><label for="updateCoughFrequency" class="block text-sm font-semibold text-gray-700 mb-2">Frekuensi Batuk</label> <select id="updateCoughFrequency" class="w-full input-field"> <option value="Tidak Ada">Tidak Ada</option> <option value="Jarang">Jarang</option> <option value="Sering">Sering</option> <option value="Terus Menerus">Terus Menerus</option> </select>
+       </div>
+      </div>
+      <div class="mb-6"><label for="updateBreathingDifficulty" class="block text-sm font-semibold text-gray-700 mb-2">Kesulitan Bernapas Saat Ini</label> <select id="updateBreathingDifficulty" class="w-full input-field"> <option value="Tidak Ada">Tidak Ada</option> <option value="Saat Aktivitas Berat">Saat Aktivitas Berat</option> <option value="Saat Aktivitas Ringan">Saat Aktivitas Ringan</option> <option value="Saat Istirahat">Saat Istirahat</option> </select>
+      </div>
+      <div class="section-divider" data-title="FUNGSI DASAR TUBUH"></div>
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+       <div><label for="updateFoodIntake" class="block text-sm font-semibold text-gray-700 mb-2">Asupan Makanan/Cairan</label> <select id="updateFoodIntake" class="w-full input-field"> <option value="Normal">Normal</option> <option value="Berkurang">Berkurang</option> <option value="Sangat Sedikit">Sangat Sedikit</option> <option value="Tidak Bisa Makan/Minum">Tidak Bisa Makan/Minum</option> </select>
+       </div>
+       <div><label for="updateUrineFrequency" class="block text-sm font-semibold text-gray-700 mb-2">Frekuensi BAK</label> <select id="updateUrineFrequency" class="w-full input-field"> <option value="Normal">Normal (4-8x/hari)</option> <option value="Berkurang">Berkurang (1-3x/hari)</option> <option value="Sangat Jarang">Sangat Jarang (&lt;1x/hari)</option> </select>
+       </div>
+      </div>
+      <div class="mb-6"><label for="updateFatigue" class="block text-sm font-semibold text-gray-700 mb-2">Tingkat Kelelahan</label> <select id="updateFatigue" class="w-full input-field"> <option value="Normal">Normal/Energik</option> <option value="Ringan">Kelelahan Ringan</option> <option value="Sedang">Kelelahan Sedang</option> <option value="Berat">Kelelahan Berat</option> </select>
+      </div>
+      <div class="mb-6"><label for="updateEmotion" class="block text-sm font-semibold text-gray-700 mb-2">Deteksi Emosi Terkini</label> <select id="updateEmotion" class="w-full input-field"> <option value="Pain">Pain (Nyeri)</option> <option value="Anxiety">Anxiety (Cemas)</option> <option value="Fear">Fear (Takut)</option> <option value="Sadness">Sadness (Sedih)</option> <option value="Neutral">Neutral (Netral)</option> <option value="Happy">Happy (Senang)</option> <option value="Calm">Calm (Tenang)</option> </select>
+      </div>
+      <div class="mb-6"><label for="updateNotes" class="block text-sm font-semibold text-gray-700 mb-2">Catatan Tambahan</label> <textarea id="updateNotes" rows="3" class="w-full input-field" placeholder="Catat perkembangan atau perubahan signifikan..."></textarea>
+      </div>
+      <div class="flex justify-end space-x-4"><button type="button" id="cancelUpdate" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"> Batal </button> <button type="submit" id="submitUpdate" class="btn-primary text-white px-6 py-3 rounded-lg font-semibold"> Simpan &amp; Analisis Ulang </button>
+       </div>
+     </form>
+    </div>
+   </div>
+
+   <div id="chatbotButton" class="chatbot-btn">
+        <svg class="w-9 h-9" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 17c-2.83 0-5.32-1.34-6.89-3.44.03-2.18 4.38-3.35 6.89-3.35 2.5 0 6.86 1.17 6.89 3.35-1.57 2.1-4.06 3.44-6.89 3.44zM12 8c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+        </svg>
+    </div>
+
+    <div id="chatbotWindow" class="chatbot-window">
+        <div class="chatbot-header">
+            <div class="flex items-center space-x-2">
+                <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zM12 20c-3.1 0-5.88-1.57-7.5-4h15c-1.62 2.43-4.4 4-7.5 4zm4-6H8v-2h8v2z"/>
+                </svg>
+                <h3 class="font-bold">Asisten Kesehatan AI</h3>
+            </div>
+            <button id="closeChatbot" class="text-white hover:text-yellow-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div id="chatbotMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
+            <div class="flex justify-start">
+                <div class="bg-blue-100 p-3 rounded-xl max-w-xs shadow-sm">
+                    <p class="text-sm text-blue-800">Halo! Saya Asisten Kesehatan AI Anda. Tanyakan tentang kondisi pasien atau bantuan navigasi. 😊</p>
+                </div>
+            </div>
+        </div>
+        <div class="chatbot-input-area"> 
+            <input type="text" id="chatbotInput" class="w-full input-field" placeholder="Ketik pesan Anda...">
+        </div>
+    </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: "#1e40af",
+      card_color: "#ffffff",
+      text_color: "#1f2937",
+      primary_action_color: "#1e40af",
+      secondary_action_color: "#fbbf24",
+      font_family: "Inter",
+      font_size: 16,
+      dashboard_title: "MediScan AI",
+      app_subtitle: "Patient Health Monitoring System"
+    };
+
+    // Data SDK tidak tersedia, data disimpan ke array lokal
+    let allRecords = []; 
+    let currentView = 'dashboard';
+    let currentFilter = 'all';
+    let currentEditingRecord = null;
+
+    // DataHandler dan fungsi-fungsi yang bergantung pada SDK dinonaktifkan/disederhanakan
+
+    const dataHandler = {
+      onDataChanged(data) {
+        allRecords = data;
+        updateDashboardStats();
+        renderEmotionChart();
+        checkCriticalConditions();
+        if (currentView === 'dashboard') {
+          renderRecentAssessments();
+        } else if (currentView === 'history') {
+          renderHistory(currentFilter);
+        }
+      }
+    };
+
+    async function init() {
+      // Blok SDK dinonaktifkan
+      await onConfigChange(defaultConfig); 
+      updateDashboardStats();
+      renderEmotionChart();
+      renderRecentAssessments(); 
+      setupEventListeners();
+      loadPatientInfo(); // Memuat info pasien saat inisialisasi
+    }
+
+    async function onConfigChange(config) {
+      const finalConfig = { ...defaultConfig, ...config };
+      const customFont = finalConfig.font_family || defaultConfig.font_family;
+      const baseFontSize = finalConfig.font_size || defaultConfig.font_size;
+      const bgColor = finalConfig.background_color || defaultConfig.background_color;
+      const primaryColor = finalConfig.primary_action_color || defaultConfig.primary_action_color;
+
+      const baseFontStack = 'Inter, -apple-system, BlinkMacSystemFont, sans-serif';
+      document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+
+      const nav = document.querySelector('nav');
+      if (nav) {
+        nav.style.background = `linear-gradient(135deg, ${bgColor} 0%, ${primaryColor} 100%)`;
+      }
+
+      const titleEl = document.getElementById('dashboardTitle');
+      if (titleEl) {
+        titleEl.style.fontSize = `${baseFontSize * 1.5}px`;
+        titleEl.textContent = finalConfig.dashboard_title || defaultConfig.dashboard_title;
+      }
+
+      const subtitleEl = document.getElementById('dashboardSubtitle');
+      if (subtitleEl) {
+        subtitleEl.style.fontSize = `${baseFontSize * 0.875}px`;
+        subtitleEl.textContent = finalConfig.app_subtitle || defaultConfig.app_subtitle;
+      }
+
+      const buttons = document.querySelectorAll('.btn-primary');
+      buttons.forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${primaryColor} 0%, #3b82f6 100%)`;
+      });
+    }
+
+    function mapToCapabilities(config) {
+        // Dinonaktifkan
+      return {}; 
+    }
+
+    function mapToEditPanelValues(config) {
+        // Dinonaktifkan
+      return new Map();
+    }
+
+    function loadPatientInfo() {
+      const photoData = localStorage.getItem('activePatientPhoto');
+      const name = localStorage.getItem('activePatientName');
+      const birthDate = localStorage.getItem('activePatientBirthDate');
+      const emotion = localStorage.getItem('activePatientEmotion');
+
+      const photoEl = document.getElementById('patientPhoto');
+      const iconEl = document.getElementById('patientIcon');
+      const nameEl = document.getElementById('patientNameDisplay');
+      const dateEl = document.getElementById('patientBirthDateDisplay');
+      const emotionEl = document.getElementById('patientEmotionDisplay');
+
+      if (photoData && name && birthDate && emotion) { 
+          photoEl.src = photoData;
+          photoEl.classList.remove('hidden');
+          iconEl.classList.add('hidden');
+          nameEl.textContent = name;
+          
+          // Memformat tanggal dari YYYY-MM-DD menjadi DD MMMM YYYY (Indonesia)
+          try {
+              const date = new Date(birthDate + 'T00:00:00'); // Tambahkan T00:00:00 untuk menghindari masalah zona waktu
+              const formattedDate = date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+              dateEl.textContent = `Tanggal Lahir: ${formattedDate}`;
+          } catch (e) {
+              // Jika format gagal, tampilkan raw data
+              dateEl.textContent = `Tanggal Lahir: ${birthDate}`; 
+          }
+
+          emotionEl.textContent = emotion;
+      } else {
+          nameEl.textContent = 'Silakan Login untuk Memulai';
+          dateEl.textContent = 'Sesi Tidak Aktif';
+          emotionEl.textContent = 'Memuat...';
+          photoEl.classList.add('hidden');
+          iconEl.classList.remove('hidden');
+      }
+    }
+
+    // Fungsi baru untuk mengisi dan mengunci kolom emosi dan nama
+    function loadAssessmentFormDefaults() {
+      const currentEmotion = localStorage.getItem('activePatientEmotion');
+      const patientName = localStorage.getItem('activePatientName'); // MENGAMBIL NAMA PASIEN
+      
+      const selectEl = document.getElementById('emotionDetected');
+      const hiddenEmotionEl = document.getElementById('emotionDetectedValue');
+      const nameInputEl = document.getElementById('patientName'); // MENGAMBIL ELEMEN INPUT NAMA
+
+      // 1. Mengisi dan Mengunci Nama Pasien
+      nameInputEl.value = patientName || 'PASIEN TIDAK DIKENAL'; 
+      // Atribut 'readonly' sudah ditambahkan di HTML
+      
+      // 2. Mengisi dan Mengunci Emosi yang Terdeteksi
+      hiddenEmotionEl.value = currentEmotion || 'Neutral';
+      
+      const displayEmotion = (currentEmotion || 'Neutral').charAt(0).toUpperCase() + (currentEmotion || 'Neutral').slice(1) + (currentEmotion ? '' : ' (Default)');
+      
+      selectEl.innerHTML = '';
+      
+      const option = document.createElement('option');
+      option.value = currentEmotion || 'Neutral';
+      option.textContent = displayEmotion;
+      option.selected = true;
+      selectEl.appendChild(option);
+
+      // Kunci dropdown Emosi
+      selectEl.disabled = true;
+    }
+
+
+    function setupEventListeners() {
+      // Navigasi Tabs
+      document.getElementById('dashboardTab').addEventListener('click', () => switchView('dashboard'));
+      document.getElementById('assessmentTab').addEventListener('click', () => switchView('assessment'));
+      document.getElementById('historyTab').addEventListener('click', () => switchView('history'));
+
+      // Tombol di Banner
+      document.getElementById('startAssessmentBtn').addEventListener('click', () => switchView('assessment')); 
+        
+      // New assessment button
+      document.getElementById('newAssessmentBtn').addEventListener('click', () => switchView('assessment'));
+
+      // Pain scale
+      document.querySelectorAll('.pain-scale-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.pain-scale-item').forEach(i => i.classList.remove('selected'));
+          item.classList.add('selected');
+          document.getElementById('painScaleValue').value = item.dataset.value;
+        });
+      });
+
+      // Assessment form
+      document.getElementById('assessmentForm').addEventListener('submit', handleAssessmentSubmit);
+      document.getElementById('cancelAssessment').addEventListener('click', () => {
+        document.getElementById('assessmentForm').reset();
+        switchView('dashboard');
+      });
+
+      // Result modal
+      document.getElementById('closeResultModal').addEventListener('click', closeResultModal);
+      document.getElementById('updateHealthBtn').addEventListener('click', openUpdateHealthModal);
+
+      // Update health form
+      document.getElementById('updateHealthForm').addEventListener('submit', handleUpdateHealthSubmit);
+      document.getElementById('cancelUpdate').addEventListener('click', closeUpdateHealthModal);
+
+      // History filters
+      document.getElementById('filterAll').addEventListener('click', () => filterHistory('all'));
+      document.getElementById('filterHospitalized').addEventListener('click', () => filterHistory('hospitalized'));
+      document.getElementById('filterOutpatient').addEventListener('click', () => filterHistory('outpatient'));
+
+      // Notifications
+      document.getElementById('dismissNotifications').addEventListener('click', () => {
+        document.getElementById('notificationsPanel').classList.add('hidden');
+      });
+
+      // Logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        showToast('Logout berhasil', 'success');
+        
+        // Bersihkan data lokal saat logout
+        localStorage.removeItem('activePatientPhoto');
+        localStorage.removeItem('activePatientName');
+        localStorage.removeItem('activePatientBirthDate');
+        localStorage.removeItem('activePatientEmotion');
+        
+        // PENGALIHAN TAMBAHAN: Kembali ke Login.html
+        setTimeout(() => {
+            window.location.href = 'Login.html';
+        }, 1000);
+      });
+      
+      // --- CHATBOT HANDLERS ---
+      document.getElementById('chatbotButton').addEventListener('click', toggleChatbot);
+      document.getElementById('closeChatbot').addEventListener('click', toggleChatbot);
+      document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          handleChatbotInput(e.target.value);
+          e.target.value = ''; // Kosongkan input
+        }
+      });
+      // --- END CHATBOT HANDLERS ---
+    }
+
+    function toggleChatbot() {
+        const windowEl = document.getElementById('chatbotWindow');
+        windowEl.classList.toggle('open');
+        if (windowEl.classList.contains('open')) {
+            document.getElementById('chatbotInput').focus();
+        }
+    }
+
+    function handleChatbotInput(message) {
+        if (!message.trim()) return;
+
+        const messagesContainer = document.getElementById('chatbotMessages');
+        
+        // Tampilkan pesan pengguna
+        messagesContainer.innerHTML += `
+            <div class="flex justify-end">
+                <div class="bg-green-500 p-3 rounded-xl max-w-xs shadow-sm">
+                    <p class="text-sm text-white">${message}</p>
+                </div>
+            </div>
+        `;
+
+        // Simulasi respons AI
+        const aiResponse = simulateAIResponse(message);
+        setTimeout(() => {
+            messagesContainer.innerHTML += `
+                <div class="flex justify-start">
+                    <div class="bg-blue-100 p-3 rounded-xl max-w-xs shadow-sm">
+                        <p class="text-sm text-blue-800">${aiResponse}</p>
+                    </div>
+                </div>
+            `;
+            // Scroll ke bawah
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 500);
+
+        // Scroll ke bawah
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function simulateAIResponse(input) {
+        const lowerInput = input.toLowerCase();
+
+        if (lowerInput.includes('kritis') || lowerInput.includes('darurat')) {
+            return "Kondisi kritis memerlukan perhatian medis segera. Mohon periksa kembali kriteria kritis (SpO2, Kesadaran, Kesulitan Bernapas) di formulir Penilaian Baru.";
+        } else if (lowerInput.includes('rawat inap')) {
+            return "Pasien Rawat Inap adalah pasien yang terdeteksi memiliki setidaknya satu kondisi kritis. Anda dapat melihat daftar pasien Rawat Inap di tab 'Riwayat' dengan filter 'Rawat Inap'.";
+        } else if (lowerInput.includes('statistik') || lowerInput.includes('dashboard')) {
+            return "Dashboard menampilkan statistik kunci seperti pasien rawat inap aktif, durasi rata-rata rawat inap, dan emosi dominan. Emosi ini sekarang diambil langsung dari emosi yang terdeteksi saat login/register.";
+        } else if (lowerInput.includes('terima kasih') || lowerInput.includes('makasih')) {
+            return "Sama-sama! Saya senang bisa membantu. Silakan bertanya lagi jika ada yang lain. 😊";
+        } else if (lowerInput.includes('siapa kamu') || lowerInput.includes('nama')) {
+            return "Saya Asisten Kesehatan AI MediScan. Tugas saya adalah membantu Anda dalam memonitor kondisi pasien dan menafsirkan data penilaian.";
+        } else if (lowerInput.includes('emosi saat ini')) {
+             return "Emosi yang ditampilkan di kartu pasien (seperti 'Tenang') adalah emosi terkini yang terdeteksi di sesi login. Emosi ini kini juga digunakan untuk mengisi panel Statistik Emosi.";
+        } else {
+            return "Maaf, saya hanya bisa menjawab pertanyaan terkait dashboard ini (kritis, statistik, rawat inap, emosi saat ini, dll.). Mohon ulangi pertanyaan Anda.";
+        }
+    }
+
+    // --- MODIFIKASI FUNGSI UPDATE DASHBOARD STATS ---
+    function updateDashboardStats() {
+      // Menghitung stats berdasarkan data riwayat (tetap menggunakan allRecords untuk non-emosi)
+      const hospitalized = allRecords.filter(r => r.hospitalization_required === true && r.status === 'active').length;
+      document.getElementById('totalHospitalized').textContent = hospitalized;
+
+      // Calculate average duration (simplified for local array)
+      const hospitalizedRecords = allRecords.filter(r => r.hospitalization_required === true);
+      if (hospitalizedRecords.length > 0) {
+        const totalDays = hospitalizedRecords.reduce((sum, record) => {
+          const created = new Date(record.created_at);
+          const now = new Date();
+          const diffTime = Math.abs(now - created);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return sum + diffDays;
+        }, 0);
+        const avgDays = Math.round(totalDays / hospitalizedRecords.length);
+        document.getElementById('avgDuration').textContent = avgDays;
+      } else {
+        document.getElementById('avgDuration').textContent = '0';
+      }
+
+      // MODIFIKASI: Ambil emosi dominan dari localStorage (data login/register)
+      const currentEmotion = localStorage.getItem('activePatientEmotion');
+      document.getElementById('dominantEmotion').textContent = currentEmotion || '-';
+    }
+    // --- END MODIFIKASI UPDATE DASHBOARD STATS ---
+
+
+    // --- MODIFIKASI FUNGSI RENDER EMOTION CHART ---
+    function renderEmotionChart() {
+      const container = document.getElementById('emotionChart');
+      const currentEmotion = localStorage.getItem('activePatientEmotion');
+      
+      if (!currentEmotion) {
+        container.innerHTML = '<p class="text-center text-gray-500 py-4">Emosi pasien tidak terdeteksi saat login/register.</p>';
+        return;
+      }
+
+      // Emosi saat ini dijadikan satu-satunya data di chart dengan asumsi count 1
+      const emotionColors = {
+        'Pain': '#dc2626',
+        'Anxiety': '#f59e0b',
+        'Fear': '#8b5cf6',
+        'Sadness': '#3b82f6',
+        'Neutral': '#6b7280',
+        'Happy': '#10b981',
+        'Calm': '#2563eb'
+      };
+      
+      // Karena hanya ada 1 data, persentasenya selalu 100%
+      const emotion = currentEmotion;
+      const percentage = 100;
+      const color = emotionColors[emotion] || '#3b82f6';
+      
+      container.innerHTML = `
+        <div class="flex items-center space-x-4">
+          <div class="w-32 text-sm font-semibold text-gray-700">${emotion} (Terkini)</div>
+          <div class="flex-1 bg-gray-200 rounded-full h-8 overflow-hidden">
+            <div class="h-full flex items-center px-3 text-white text-sm font-bold transition-all duration-500" 
+                 style="width: ${percentage}%; background: ${color};">
+              Status Aktif
+            </div>
+          </div>
+          <div class="w-16 text-right text-sm font-semibold text-gray-600">
+            100%
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Data ini diambil dari Emosi Terdeteksi Saat Ini (Login/Register).</p>
+      `;
+    }
+    // --- END MODIFIKASI RENDER EMOTION CHART ---
+
+    function checkCriticalConditions() {
+      // Di lingkungan non-SDK, fungsi ini akan selalu tersembunyi
+      const panel = document.getElementById('notificationsPanel');
+      panel.classList.add('hidden');
+    }
+
+    function renderRecentAssessments() {
+      const container = document.getElementById('recentAssessmentsList');
+      
+      if (allRecords.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 py-8">Belum ada data penilaian. Mulai dengan membuat penilaian baru.</p>';
+        return;
+      }
+
+      const recent = [...allRecords].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+      
+      container.innerHTML = recent.map(record => `
+        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-gray-800">${record.patient_name}</h3>
+                <p class="text-sm text-gray-500">Emosi: ${record.emotion_detected}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="badge ${record.hospitalization_required ? 'badge-critical' : 'badge-success'}">
+                ${record.hospitalization_required ? 'Rawat Inap' : 'Rawat Jalan'}
+              </span>
+              <p class="text-xs text-gray-500 mt-1">${formatDate(record.created_at)}</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 mb-3">
+            <p class="text-sm text-gray-700"><strong>Diagnosis:</strong> ${record.diagnosis}</p>
+          </div>
+          <div class="flex items-center justify-between">
+            <button class="text-blue-600 text-sm font-semibold hover:underline" onclick="viewRecordDetails('${record.record_id}')">
+              Lihat Detail →
+            </button>
+            <button onclick="quickUpdatePatient('${record.record_id}')" class="quick-action-btn">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Quick Update
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function quickUpdatePatient(recordId) {
+      const record = allRecords.find(r => r.record_id === recordId);
+      if (record) {
+        currentEditingRecord = record;
+        openUpdateHealthModal();
+      } else {
+          showToast('Rekaman tidak ditemukan. (Mode lokal: Data tidak disimpan secara persisten)', 'error');
+      }
+    }
+
+    function filterHistory(filter) {
+      currentFilter = filter;
+      
+      document.getElementById('filterAll').classList.remove('bg-blue-900', 'text-white');
+      document.getElementById('filterAll').classList.add('bg-gray-200', 'text-gray-700');
+      document.getElementById('filterHospitalized').classList.remove('bg-blue-900', 'text-white');
+      document.getElementById('filterHospitalized').classList.add('bg-gray-200', 'text-gray-700');
+      document.getElementById('filterOutpatient').classList.remove('bg-blue-900', 'text-white');
+      document.getElementById('filterOutpatient').classList.add('bg-gray-200', 'text-gray-700');
+
+      if (filter === 'all') {
+        document.getElementById('filterAll').classList.remove('bg-gray-200', 'text-gray-700');
+        document.getElementById('filterAll').classList.add('bg-blue-900', 'text-white');
+      } else if (filter === 'hospitalized') {
+        document.getElementById('filterHospitalized').classList.remove('bg-gray-200', 'text-gray-700');
+        document.getElementById('filterHospitalized').classList.add('bg-blue-900', 'text-white');
+      } else {
+        document.getElementById('filterOutpatient').classList.remove('bg-gray-200', 'text-gray-700');
+        document.getElementById('filterOutpatient').classList.add('bg-blue-900', 'text-white');
+      }
+
+      renderHistory(filter);
+    }
+
+    function renderHistory(filter) {
+      const container = document.getElementById('historyList');
+      
+      let filtered = [...allRecords];
+      if (filter === 'hospitalized') {
+        filtered = filtered.filter(r => r.hospitalization_required === true);
+      } else if (filter === 'outpatient') {
+        filtered = filtered.filter(r => r.hospitalization_required === false);
+      }
+
+      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 py-8">Tidak ada riwayat untuk filter ini.</p>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(record => `
+        <div class="history-item ${record.hospitalization_required ? 'hospitalized' : ''}">
+          <div class="bg-white rounded-xl border-2 border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-lg font-bold text-gray-800">${record.patient_name}</h3>
+                <p class="text-sm text-gray-600">${formatDate(record.created_at)}</p>
+              </div>
+              <span class="badge ${record.hospitalization_required ? 'badge-critical' : 'badge-success'}">
+                ${record.hospitalization_required ? 'Rawat Inap' : 'Rawat Jalan'}
+              </span>
+            </div>
+            <div class="grid md:grid-cols-2 gap-3 mb-3">
+              <div class="bg-gray-50 rounded-lg p-3">
+                <p class="text-xs text-gray-600">Emosi Terdeteksi</p>
+                <p class="font-semibold text-gray-800">${record.emotion_detected}</p>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-3">
+                <p class="text-xs text-gray-600">Skala Nyeri</p>
+                <p class="font-semibold text-gray-800">${record.pain_scale}/10</p>
+              </div>
+            </div>
+            <div class="bg-blue-50 rounded-lg p-3 mb-3">
+              <p class="text-sm"><strong>Diagnosis:</strong> ${record.diagnosis}</p>
+            </div>
+            <button class="text-blue-600 text-sm font-semibold hover:underline" onclick="viewRecordDetails('${record.record_id}')">
+              Lihat Detail Lengkap →
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function handleAssessmentSubmit(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('submitAssessment');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Menganalisis...';
+
+      // Mengabaikan batas 999 di mode lokal untuk pengujian, tetapi logika disimpan.
+      /*
+      if (allRecords.length >= 999) {
+        showToast('Maksimum 999 data tercapai', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Analisis & Simpan';
+        return;
+      }
+      */
+
+      const additionalSymptoms = Array.from(document.querySelectorAll('.additional-symptoms:checked'))
+        .map(cb => cb.value).join(', ');
+
+      const formData = {
+        record_id: `rec_${Date.now()}`,
+        patient_name: document.getElementById('patientName').value.trim(),
+        // AMBIL NILAI DARI HIDDEN INPUT (DATA EMOSI DARI LOGIN/REGISTER)
+        emotion_detected: document.getElementById('emotionDetectedValue').value, 
+        // visit_count akan selalu 1 di mode non-SDK
+        visit_count: 1, 
+        fever: document.querySelector('input[name="fever"]:checked').value === 'true',
+        temperature: parseFloat(document.getElementById('temperature').value) || 36.5,
+        cough: document.querySelector('input[name="cough"]:checked').value === 'true',
+        cough_type: document.getElementById('coughType').value,
+        shortness_breath: document.querySelector('input[name="shortnessBreath"]:checked').value === 'true',
+        main_complaint: document.getElementById('mainComplaint').value.trim(),
+        chronic_disease: document.getElementById('chronicDisease').value,
+        additional_symptoms: additionalSymptoms,
+        duration_number: parseInt(document.getElementById('durationNumber').value) || 0,
+        duration_unit: document.getElementById('durationUnit').value,
+        pain_scale: parseInt(document.getElementById('painScaleValue').value) || 0,
+        spo2: document.getElementById('spo2').value,
+        breathing_difficulty: document.getElementById('breathingDifficulty').value,
+        food_intake: document.getElementById('foodIntake').value,
+        consciousness: document.getElementById('consciousness').value,
+        urine_output: document.getElementById('urineOutput').value,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        last_updated: new Date().toISOString()
+      };
+
+      const analysis = analyzePatient(formData);
+      formData.diagnosis = analysis.diagnosis;
+      formData.hospitalization_required = analysis.hospitalizationRequired;
+      formData.recommendation = analysis.recommendation;
+      formData.critical_conditions = analysis.criticalConditions;
+      
+      // LOGIKA PENYIMPANAN LOKAL DAN PEMBARUAN TAMPILAN
+      allRecords.push(formData); // Simpan ke array lokal
+      showToast('Penilaian berhasil disimpan (Lokal)!', 'success');
+      
+      // Reset formulir
+      document.getElementById('assessmentForm').reset();
+      document.querySelectorAll('.pain-scale-item').forEach(i => i.classList.remove('selected'));
+      document.getElementById('painScaleValue').value = '0';
+      
+      // --- PENTING: UPDATE TAMPILAN DASHBOARD & RIWAYAT ---
+      updateDashboardStats(); // Memperbarui angka statistik (termasuk emosi)
+      renderRecentAssessments(); // Memperbarui daftar Penilaian Terbaru
+      renderHistory(currentFilter); // Memperbarui daftar Riwayat
+      
+      showResultModal(formData); 
+      // End of non-SDK logic
+
+      btn.disabled = false;
+      btn.innerHTML = 'Analisis & Simpan';
+    }
+
+    function analyzePatient(data) {
+      let diagnosis = '';
+      let hospitalizationRequired = false;
+      let recommendation = '';
+      const criticalConditions = [];
+
+      // Check critical conditions
+      if (data.spo2.includes('Kritis') || data.spo2.includes('≤92%')) {
+        criticalConditions.push('Saturasi oksigen rendah (≤92%)');
+        hospitalizationRequired = true;
+      }
+
+      if (data.breathing_difficulty.includes('Kritis') || data.breathing_difficulty.includes('Istirahat')) {
+        criticalConditions.push('Kesulitan bernapas saat istirahat');
+        hospitalizationRequired = true;
+      }
+
+      if (data.food_intake.includes('Kritis') || data.food_intake.includes('Tidak Bisa Menelan')) {
+        criticalConditions.push('Tidak bisa menelan makanan/minuman');
+        hospitalizationRequired = true;
+      }
+
+      if (data.consciousness.includes('Kritis') || data.consciousness.includes('Pingsan') || 
+          data.consciousness.includes('Kebingungan') || data.consciousness.includes('Nyeri Dada')) {
+        criticalConditions.push('Kondisi kesadaran kritis atau nyeri dada');
+        hospitalizationRequired = true;
+      }
+
+      if (data.urine_output.includes('Kritis') || data.urine_output.includes('8 Jam')) {
+        criticalConditions.push('Tidak BAK dalam 8 jam terakhir');
+        hospitalizationRequired = true;
+      }
+
+      // Generate diagnosis
+      const symptoms = [];
+      if (data.fever) symptoms.push('demam');
+      if (data.cough) symptoms.push(`batuk ${data.cough_type.toLowerCase()}`);
+      if (data.shortness_breath) symptoms.push('sesak napas');
+      if (data.pain_scale >= 7) symptoms.push('nyeri berat');
+
+      if (symptoms.length > 0) {
+        diagnosis = `Pasien menunjukkan gejala ${symptoms.join(', ')}`;
+      } else {
+        diagnosis = 'Pasien menunjukkan keluhan ringan';
+      }
+
+      if (data.chronic_disease !== 'Tidak Ada') {
+        diagnosis += ` dengan riwayat ${data.chronic_disease.toLowerCase()}`;
+      }
+
+      diagnosis += `. ${data.main_complaint}.`;
+
+      // Generate recommendation
+      if (hospitalizationRequired) {
+        recommendation = `⚠️ SEGERA RAWAT INAP\n\nKondisi Kritis Terdeteksi:\n${criticalConditions.map(c => `• ${c}`).join('\n')}\n\nTindakan Segera:\n• Hubungi ambulans atau bawa ke IGD segera\n• Jangan menunda perawatan medis\n• Monitor kondisi vital signs secara ketat\n• Persiapkan riwayat medis lengkap pasien`;
+      } else {
+        recommendation = `Rawat Jalan - Perawatan di Rumah\n\nRekomendasi:\n• Istirahat yang cukup (minimal 7-8 jam tidur)\n• Konsumsi obat sesuai resep dokter\n• Perbanyak minum air putih (minimal 2 liter/hari)\n• Konsumsi makanan bergizi seimbang\n• Monitor suhu tubuh secara berkala`;
+        
+        if (data.fever) {
+          recommendation += `\n• Kompres hangat jika demam\n• Konsumsi paracetamol sesuai dosis`;
+        }
+        
+        if (data.cough) {
+          recommendation += `\n• Konsumsi obat batuk sesuai jenis batuk\n• Hindari makanan/minuman dingin`;
+        }
+
+        recommendation += `\n\nKontrol kembali jika:\n• Gejala memburuk dalam 3 hari\n• Demam >38.5°C lebih dari 3 hari\n• Kesulitan bernapas meningkat\n• Muncul gejala baru yang mengkhawatirkan`;
+      }
+
+      return { diagnosis, hospitalizationRequired, recommendation, criticalConditions };
+    }
+
+    function showResultModal(data) {
+      const modal = document.getElementById('resultModal');
+      const icon = document.getElementById('resultIcon');
+      const iconPulse = document.getElementById('resultIconPulse');
+      const title = document.getElementById('resultTitle');
+      const subtitle = document.getElementById('resultSubtitle');
+      const content = document.getElementById('resultContent');
+      
+      if (data.hospitalization_required) {
+        // Critical condition styling
+        icon.innerHTML = `
+          <svg class="w-16 h-16 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z"/>
+          </svg>
+        `;
+        icon.className = 'inline-flex items-center justify-center w-24 h-24 rounded-full relative z-10 shadow-lg bg-gradient-to-br from-red-100 to-red-200';
+        iconPulse.style.border = '4px solid #dc2626';
+        title.textContent = '🚨 KONDISI KRITIS';
+        title.className = 'text-3xl font-bold text-red-600 mb-2';
+        subtitle.textContent = 'Membutuhkan Perawatan Medis Segera';
+        
+        content.innerHTML = `
+          <div class="medical-card critical medical-pattern">
+            <div class="heartbeat-line text-red-600 mb-4"></div>
+            <div class="flex items-start space-x-4 mb-4">
+              <div class="bg-red-600 rounded-full p-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-red-800 text-lg">Informasi Pasien</h3>
+                <p class="text-gray-700 mt-1"><strong>Nama:</strong> ${data.patient_name}</p>
+                <p class="text-gray-700"><strong>Emosi Terdeteksi:</strong> ${data.emotion_detected}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-3 mb-4">
+            <div class="vital-sign-card critical">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">SpO2</span>
+                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L1 21h22L12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z"/>
+                </svg>
+              </div>
+              <p class="text-2xl font-bold text-red-700">${data.spo2.split('(')[0]}</p>
+            </div>
+            <div class="vital-sign-card ${data.temperature > 37.5 ? 'warning' : 'normal'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">Suhu</span>
+                <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
+                </svg>
+              </div>
+              <p class="text-2xl font-bold text-gray-800">${data.temperature}°C</p>
+            </div>
+            <div class="vital-sign-card ${data.pain_scale >= 7 ? 'critical' : data.pain_scale >= 4 ? 'warning' : 'normal'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">Nyeri</span>
+                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+              <p class="text-2xl font-bold text-gray-800">${data.pain_scale}/10</p>
+            </div>
+          </div>
+
+          <div class="medical-card critical mb-4">
+            <h3 class="font-bold text-red-800 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
+              </svg>
+              Diagnosis Medis
+            </h3>
+            <p class="text-gray-800 leading-relaxed">${data.diagnosis}</p>
+          </div>
+
+          <div class="bg-red-600 text-white rounded-xl p-5 mb-4">
+            <h3 class="font-bold text-xl mb-3 flex items-center">
+              <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z"/>
+              </svg>
+              Kondisi Kritis Terdeteksi
+            </h3>
+            <ul class="space-y-2">
+              ${(data.critical_conditions || []).map(condition => `
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  </svg>
+                  <span>${condition}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+
+          <div class="medical-card critical">
+            <h3 class="font-bold text-red-800 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/>
+              </svg>
+              Rekomendasi Tindakan
+            </h3>
+            <p class="text-gray-800 whitespace-pre-line leading-relaxed">${data.recommendation}</p>
+          </div>
+        `;
+        
+        document.getElementById('updateHealthBtn').classList.remove('hidden');
+      } else {
+        // Success condition styling
+        icon.innerHTML = `
+          <svg class="w-16 h-16 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+          </svg>
+        `;
+        icon.className = 'inline-flex items-center justify-center w-24 h-24 rounded-full relative z-10 shadow-lg bg-gradient-to-br from-green-100 to-green-200';
+        iconPulse.style.border = '4px solid #10b981';
+        title.textContent = '✅ Penilaian Selesai';
+        title.className = 'text-3xl font-bold text-green-600 mb-2';
+        subtitle.textContent = 'Kondisi Pasien Stabil - Rawat Jalan';
+        
+        content.innerHTML = `
+          <div class="medical-card success medical-pattern">
+            <div class="heartbeat-line text-green-600 mb-4"></div>
+            <div class="flex items-start space-x-4 mb-4">
+              <div class="bg-green-600 rounded-full p-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-green-800 text-lg">Informasi Pasien</h3>
+                <p class="text-gray-700 mt-1"><strong>Nama:</strong> ${data.patient_name}</p>
+                <p class="text-gray-700"><strong>Emosi Terdeteksi:</strong> ${data.emotion_detected}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-3 mb-4">
+            <div class="vital-sign-card normal">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">SpO2</span>
+                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+              </div>
+              <p class="text-2xl font-bold text-green-700">${data.spo2.split('(')[0]}</p>
+            </div>
+            <div class="vital-sign-card ${data.temperature > 37.5 ? 'warning' : 'normal'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">Suhu</span>
+                <svg class="w-5 h-5 ${data.temperature > 37.5 ? 'text-orange-600' : 'text-green-600'}" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-1v1h1v2h-1v1h1v2h-2V5z"/>
+                </svg>
+              </div>
+              <p class="text-2xl font-bold text-gray-800">${data.temperature}°C</p>
+            </div>
+            <div class="vital-sign-card ${data.pain_scale >= 7 ? 'critical' : data.pain_scale >= 4 ? 'warning' : 'normal'}">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-600">Nyeri</span>
+                <svg class="w-5 h-5 ${data.pain_scale >= 7 ? 'text-red-600' : data.pain_scale >= 4 ? 'text-orange-600' : 'text-green-600'}" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+              <p class="text-2xl font-bold text-gray-800">${data.pain_scale}/10</p>
+            </div>
+          </div>
+
+          <div class="medical-card success mb-4">
+            <h3 class="font-bold text-green-800 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
+              </svg>
+              Diagnosis Medis
+            </h3>
+            <p class="text-gray-800 leading-relaxed">${data.diagnosis}</p>
+          </div>
+
+          <div class="medical-card success">
+            <h3 class="font-bold text-green-800 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
+              Rekomendasi Perawatan
+            </h3>
+            <p class="text-gray-800 whitespace-pre-line leading-relaxed">${data.recommendation}</p>
+          </div>
+        `;
+        
+        document.getElementById('updateHealthBtn').classList.add('hidden');
+      }
+
+      currentEditingRecord = data;
+      modal.classList.remove('hidden');
+    }
+
+    function closeResultModal() {
+      document.getElementById('resultModal').classList.add('hidden');
+      currentEditingRecord = null;
+      switchView('dashboard');
+    }
+
+    function openUpdateHealthModal() {
+      if (!currentEditingRecord) return;
+      
+      document.getElementById('updatePatientName').textContent = currentEditingRecord.patient_name;
+      document.getElementById('resultModal').classList.add('hidden');
+      document.getElementById('updateHealthModal').classList.remove('hidden');
+    }
+
+    function closeUpdateHealthModal() {
+      document.getElementById('updateHealthModal').classList.add('hidden');
+      document.getElementById('updateHealthForm').reset();
+    }
+
+    async function handleUpdateHealthSubmit(e) {
+      e.preventDefault();
+      
+      if (!currentEditingRecord) return;
+
+      const btn = document.getElementById('submitUpdate');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Menganalisis ulang...';
+
+      const record = allRecords.find(r => r.record_id === currentEditingRecord.record_id);
+      if (!record) {
+        showToast('Data tidak ditemukan', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Simpan & Analisis Ulang';
+        return;
+      }
+
+      const spo2Value = parseInt(document.getElementById('updateSpo2').value) || 95;
+      const tempValue = parseFloat(document.getElementById('updateTemperature').value) || 36.5;
+      const painValue = parseInt(document.getElementById('updatePainScale').value) || 5;
+
+      // Determine new SpO2 category
+      let spo2Category = '';
+      if (spo2Value > 95) spo2Category = 'Normal (>95%)';
+      else if (spo2Value >= 93) spo2Category = 'Cukup (93-95%)';
+      else spo2Category = 'Kritis (≤92%)';
+
+      // Update record
+      record.spo2 = spo2Category;
+      record.temperature = tempValue;
+      record.pain_scale = painValue;
+      record.breathing_difficulty = document.getElementById('updateBreathingDifficulty').value;
+      record.food_intake = document.getElementById('updateFoodIntake').value;
+      record.emotion_detected = document.getElementById('updateEmotion').value;
+      record.last_updated = new Date().toISOString();
+
+      // Re-analyze
+      const analysis = analyzePatient(record);
+      record.diagnosis = analysis.diagnosis;
+      record.hospitalization_required = analysis.hospitalizationRequired;
+      record.recommendation = analysis.recommendation;
+      record.critical_conditions = analysis.criticalConditions;
+      
+      // Update data di array lokal (simulasi SDK update)
+      const index = allRecords.findIndex(r => r.record_id === record.record_id);
+      if (index !== -1) {
+          allRecords[index] = record;
+      }
+
+      showToast('Update berhasil! Rekomendasi telah diperbarui (Lokal).', 'success');
+      closeUpdateHealthModal();
+      showResultModal(record);
+      
+      btn.disabled = false;
+      btn.innerHTML = 'Simpan & Analisis Ulang';
+    }
+
+    function viewRecordDetails(recordId) {
+      const record = allRecords.find(r => r.record_id === recordId);
+      if (record) {
+        currentEditingRecord = record;
+        showResultModal(record);
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('id-ID', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function formatTimeAgo(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      
+      if (diffMins < 60) return `${diffMins} menit yang lalu`;
+      if (diffHours < 24) return `${diffHours} jam yang lalu`;
+      return formatDate(dateString);
+    }
+
+    // Fungsi switchView harus berada di atas atau di luar init untuk memastikan ketersediaannya
+    function switchView(view) {
+      currentView = view;
+      
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('assessmentView').classList.add('hidden');
+      document.getElementById('historyView').classList.add('hidden');
+
+      document.getElementById('dashboardTab').classList.remove('tab-active');
+      document.getElementById('dashboardTab').classList.add('tab-inactive');
+      document.getElementById('assessmentTab').classList.remove('tab-active');
+      document.getElementById('assessmentTab').classList.add('tab-inactive');
+      document.getElementById('historyTab').classList.remove('tab-active');
+      document.getElementById('historyTab').classList.add('tab-inactive');
+
+      if (view === 'dashboard') {
+        document.getElementById('dashboardView').classList.remove('hidden');
+        document.getElementById('dashboardTab').classList.add('tab-active');
+        document.getElementById('dashboardTab').classList.remove('tab-inactive');
+        renderRecentAssessments();
+        renderEmotionChart();
+      } else if (view === 'assessment') {
+        document.getElementById('assessmentView').classList.remove('hidden');
+        document.getElementById('assessmentTab').classList.add('tab-active');
+        document.getElementById('assessmentTab').classList.remove('tab-inactive');
+        loadAssessmentFormDefaults(); // Panggil fungsi yang diperbarui
+      } else if (view === 'history') {
+        document.getElementById('historyView').classList.remove('hidden');
+        document.getElementById('historyTab').classList.add('tab-active');
+        document.getElementById('historyTab').classList.remove('tab-inactive');
+        renderHistory(currentFilter);
+      }
+    }
+
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a21ca8d34f14ad9',t:'MTc2Mzc0NDkyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
