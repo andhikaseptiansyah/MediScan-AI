@@ -2136,7 +2136,7 @@
       else if (spo2Value >= 93) spo2Category = 'Cukup (93-95%)';
       else spo2Category = 'Kritis (≤92%)';
 
-      // Update record
+      // Update record with data from the form fields
       record.spo2 = spo2Category;
       record.temperature = tempValue;
       record.pain_scale = painValue;
@@ -2145,6 +2145,16 @@
       record.emotion_detected = document.getElementById('updateEmotion').value;
       record.last_updated = new Date().toISOString();
 
+      // ============== PERBAIKAN PENTING UNTUK MENORMALKAN STATUS RAWAT INAP ==============
+      // Mengatur ulang kriteria kritis yang tidak ada di formulir update (Kesadaran dan Urin)
+      // ke nilai "Normal" untuk memungkinkan pasien berubah status dari Rawat Inap,
+      // asalkan data vital lainnya juga normal.
+      
+      record.consciousness = 'Normal/Sadar Penuh'; // Menormalkan Kondisi Umum/Kesadaran
+      record.urine_output = 'Normal';             // Menormalkan Output Urin
+      
+      // =================================================================================
+
       // Re-analyze
       const analysis = analyzePatient(record);
       record.diagnosis = analysis.diagnosis;
@@ -2152,7 +2162,7 @@
       record.recommendation = analysis.recommendation;
       record.critical_conditions = analysis.criticalConditions;
       
-      // Update data di array lokal (simulasi SDK update)
+      // Update data in the local array (simulating SDK update)
       const index = allRecords.findIndex(r => r.record_id === record.record_id);
       if (index !== -1) {
           allRecords[index] = record;
@@ -2165,7 +2175,6 @@
       btn.disabled = false;
       btn.innerHTML = 'Simpan & Analisis Ulang';
     }
-
     function viewRecordDetails(recordId) {
       const record = allRecords.find(r => r.record_id === recordId);
       if (record) {
